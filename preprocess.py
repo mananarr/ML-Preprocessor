@@ -9,6 +9,13 @@ from sklearn.model_selection import KFold
 from scipy.stats import zscore, skew, shapiro
 import category_encoders as ce
 import sys
+import os
+
+
+def print_usage():
+    print("Usage: python preprocess.py <dataset.csv>")
+    print("Example: python preprocess.py /path/to/dataset.csv")
+
 
 # Load your dataset
 def load_dataset(file_path):
@@ -244,6 +251,10 @@ def detect_outliers(df):
         print(f"Outlier indices: {outlier_indices[col]}")
 
         if outlier_count > 0:
+            choice = input("Do you want to cap these outliers? (y/n, default: y): ").strip().lower()
+            if choice in ('n', 'no'):
+                print(f"Skipping outlier capping for {col}.")
+                continue
             print("\nCapping the outliers: ")
             # Capping: replace outliers with the min/max non-outlier values
             Q1 = df[col].quantile(0.25)
@@ -458,5 +469,16 @@ def preprocess_dataset(file_path):
     save_preprocessed_dataset(df, file_path)
     return df
 
-file_path = sys.argv[1]
-preprocessed_data = preprocess_dataset(file_path)
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Incorrect usage.")
+        print_usage()
+        sys.exit(1)
+
+    input_file = sys.argv[1]
+    if not os.path.isfile(input_file):
+        print(f"File not found: {input_file}")
+        print_usage()
+        sys.exit(1)
+
+    preprocess_dataset(input_file)
